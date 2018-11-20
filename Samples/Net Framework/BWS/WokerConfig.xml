@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WorkersConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Configurations>
+
+    <Configuration CommandType="ByInstanceType" Name="SQSMessageTasksReceiver" 
+			FriendlyName="SaaS Message Dispatcher"
+			InstanceType="WIKIAWS.Workers.SQSMessageReceiver"
+			SQSProcessType="DataProfiling" SQSMessageInstanceType="WIKIAWS.Workers.DataProfiling.DataProfilingMessage"
+			SQSQueueName="data_bla_bla_queue" SQSWaitTimeSeconds="10" SQSMessagesInBatch="10"  FileStoragePath="c:\temp"
+			LogSeverity="Debug" Enabled="false"
+			>
+      <SQLCommandCondition Command="" ConnectionString="server=localhost;database=db db;User ID=AspNet;Integrated Security=True;Asynchronous Processing=true"
+                            ConfigurationSection="" CommandTimeOut="172800" />
+      <ExecuteCondition ExecInterval="5" ExecIntervalType="Second" ThreadSleepTimeoutBatchMode="10"  StartFreezed="false"  Runimmediately="false" />
+      <WorkerParameters>
+        <Parameter Name="FilterUserEmails"  Value="s@s.com" />
+      </WorkerParameters>
+    </Configuration>
+
+	</Configurations>
+</WorkersConfiguration>
