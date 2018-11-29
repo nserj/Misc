@@ -1,0 +1,55 @@
+﻿@model Dictionary<string, FWServiceAdmin.Code.PropertyValue>
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+
+
+<div class="container" id="divTable" style="margin-top:100px">
+    @await Html.PartialAsync("_ServiceStateTablePartial", Model)
+</div>
+
+<div class="row">
+
+    <button id="btnFreeze" name="command" class="btn @(Convert.ToBoolean(Model["Freezed"].Value) ? "btn-warning" : "btn-primary")"
+            setfreeze="@(Convert.ToBoolean(Model["Freezed"].Value) ? "0" : "1")">@(Convert.ToBoolean(Model["Freezed"].Value) ? "Unfreeze" : "Freeze")</button>
+
+
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $("#btnFreeze").click(function () {
+
+                $.ajax({
+                    type: "POST",
+                    url: "/Home/Freeze",
+                    contentType: "application/json; charset=utf-8",
+                    data: JSON.stringify({ freeze: ($("#btnFreeze").attr("setfreeze") == "0" ? false : true) }),
+                    dataType: "json",
+                    success: function (result, status, xhr) {
+
+                        var freeze_state = result.state; 
+
+                        $("#divTable").html(result.pdata);
+
+                        var btn = $("#btnFreeze");
+
+                        btn.text((freeze_state ? "Unfreeze" : "Freeze"));
+                        btn.removeClass(freeze_state ? "btn-primary" : "btn-warning");
+                        btn.addClass(freeze_state ? "btn-warning" : "btn-primary");
+                        btn.attr("setfreeze", (freeze_state ? "0" : "1"));
+
+                    },
+                    error: function (xhr, status, error) {
+                        $("#divTable").html("Result: " + status + " " + error + " " + xhr.status + " " + xhr.statusText)
+                    }
+                });
+                return false;
+            });
+        });
+
+
+    </script>
+}

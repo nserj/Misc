@@ -1,0 +1,24 @@
+﻿@model Dictionary<string, FWServiceAdmin.Code.PropertyValue>
+
+<p>
+   
+</p>
+<table class="table table-bordered table-responsive table-hover" id="tbStatus">
+    <thead>
+        <tr>
+            @foreach (var d in Model)
+            {
+                <th>@d.Value.Name</th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+
+        <tr>
+            @foreach (var d in Model)
+            {
+                <td style="color:@d.Value.ValueColor.Name">@d.Value.Value</td>
+            }
+        </tr>
+    </tbody>
+</table>
