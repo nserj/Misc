@@ -1,55 +1,51 @@
-﻿@model Dictionary<string, FWServiceAdmin.Code.PropertyValue>
+﻿
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Microservice control panel";
 }
 
 
-
 <div class="container" id="divTable" style="margin-top:100px">
-    @await Html.PartialAsync("_ServiceStateTablePartial", Model)
-</div>
+    <div>
+        <button data-bind="click: getState" title="Refresh state">
+            <img src="~/images/Refresh.gif" />
+        </button>
+    </div>
+    <table class="table table-sm table-condensed table-bordered table-responsive table-hover"  id="tbStatus">
+        <thead>
+            <tr class="tableHeader" data-bind="foreach: viewModel.state">
+                <th  data-bind="text: friendlyName"></th>
+            </tr>
+        </thead>
+        <tbody>
 
-<div class="row">
+            <tr data-bind="foreach: viewModel.state">
+                <td data-bind="dateString: value, datePattern: 'MM/DD/YYYY hh:mm:ss', style: {color: valueColor}"></td>
+            </tr>
+        </tbody>
+    </table>
 
-    <button id="btnFreeze" name="command" class="btn @(Convert.ToBoolean(Model["Freezed"].Value) ? "btn-warning" : "btn-primary")"
-            setfreeze="@(Convert.ToBoolean(Model["Freezed"].Value) ? "0" : "1")">@(Convert.ToBoolean(Model["Freezed"].Value) ? "Unfreeze" : "Freeze")</button>
+    <div class="row">
+        <button id="btnFreeze" class="btn-primary" data-bind='click: freeze, text: freezeButtonText(),css: freezeButtonCss()'></button>
+    </div>
 
+    <div id="dvState"></div>
 
 </div>
 
 @section Scripts {
+
+
+    <script src="~/js/knkMSModel.js"></script> 
+    <script src="~/js/knk_hlp.js"></script>
+
     <script>
+
         $(document).ready(function () {
-            $("#btnFreeze").click(function () {
 
-                $.ajax({
-                    type: "POST",
-                    url: "/Home/Freeze",
-                    contentType: "application/json; charset=utf-8",
-                    data: JSON.stringify({ freeze: ($("#btnFreeze").attr("setfreeze") == "0" ? false : true) }),
-                    dataType: "json",
-                    success: function (result, status, xhr) {
+            var mc = new MCSState('@Url.Action("GetStatus", "Home")','@Url.Action("Freeze", "Home")');
+            mc.getState();
 
-                        var freeze_state = result.state; 
-
-                        $("#divTable").html(result.pdata);
-
-                        var btn = $("#btnFreeze");
-
-                        btn.text((freeze_state ? "Unfreeze" : "Freeze"));
-                        btn.removeClass(freeze_state ? "btn-primary" : "btn-warning");
-                        btn.addClass(freeze_state ? "btn-warning" : "btn-primary");
-                        btn.attr("setfreeze", (freeze_state ? "0" : "1"));
-
-                    },
-                    error: function (xhr, status, error) {
-                        $("#divTable").html("Result: " + status + " " + error + " " + xhr.status + " " + xhr.statusText)
-                    }
-                });
-                return false;
-            });
         });
-
 
     </script>
 }

@@ -1,232 +1,214 @@
-﻿using System.Net.Http;
-using FWServiceAdmin.Models;
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace WebAPI
 {
-    #pragma warning disable 
+#pragma warning disable // Disable all warnings
 
-    public partial class WebAPIClient
+    public partial class MSClient
     {
-        private string _baseUrl = "https://localhost:5001";
-        private System.Net.Http.HttpClient _httpClient;
-        private System.Lazy<Newtonsoft.Json.JsonSerializerSettings> _settings;
-    
-        public WebAPIClient(System.Net.Http.HttpClient httpClient)
+        private string _baseUrl;
+        private HttpClient _httpClient;
+        private System.Lazy<JsonSerializerSettings> _settings;
+
+        public MSClient(HttpClient httpClient)
         {
-            _httpClient = httpClient; 
-            _settings = new System.Lazy<Newtonsoft.Json.JsonSerializerSettings>(() => 
+            _httpClient = httpClient;
+            _settings = new Lazy<JsonSerializerSettings>(() =>
             {
-                var settings = new Newtonsoft.Json.JsonSerializerSettings();
+                var settings = new JsonSerializerSettings();
                 UpdateJsonSerializerSettings(settings);
                 return settings;
             });
         }
-    
-        public string BaseUrl 
+
+        public string BaseUrl
         {
             get { return _baseUrl; }
             set { _baseUrl = value; }
         }
-    
-        public Newtonsoft.Json.JsonSerializerSettings JsonSerializerSettings { get { return _settings.Value; } }
-    
-        partial void UpdateJsonSerializerSettings(Newtonsoft.Json.JsonSerializerSettings settings);
-        partial void PrepareRequest(System.Net.Http.HttpClient client, System.Net.Http.HttpRequestMessage request, string url);
-        partial void PrepareRequest(System.Net.Http.HttpClient client, System.Net.Http.HttpRequestMessage request, System.Text.StringBuilder urlBuilder);
-        partial void ProcessResponse(System.Net.Http.HttpClient client, System.Net.Http.HttpResponseMessage response);
-    
-        public System.Threading.Tasks.Task<TaskStateReport> GetStateAsync()
+
+        public JsonSerializerSettings JsonSerializerSettings { get { return _settings.Value; } }
+
+        partial void UpdateJsonSerializerSettings(JsonSerializerSettings settings);
+        partial void PrepareRequest(HttpClient client, HttpRequestMessage request, string url);
+        partial void PrepareRequest(HttpClient client, HttpRequestMessage request, System.Text.StringBuilder urlBuilder);
+        partial void ProcessResponse(HttpClient client, HttpResponseMessage response);
+
+        /// <summary>
+        /// Execure GET request
+        /// </summary>
+        /// <typeparam name="T">Type of returned object</typeparam>
+        /// <param name="url">relative URL to API</param>
+        /// <returns>T object</returns>
+        public async Task<T> GetAsync<T>(string url)
         {
-            return GetStateAsync(System.Threading.CancellationToken.None);
+            return await GetAsync<T>(url, CancellationToken.None);
         }
-    
-        public async System.Threading.Tasks.Task<TaskStateReport> GetStateAsync(System.Threading.CancellationToken cancellationToken)
-        {
-            var urlBuilder_ = new System.Text.StringBuilder();
-            urlBuilder_.Append(BaseUrl != null ? BaseUrl.TrimEnd('/') : "").Append("/api/State/GetState");
-    
-            var client_ = _httpClient;
-            try
-            {
-                using (var request_ = new System.Net.Http.HttpRequestMessage())
-                {
-                    request_.Method = new System.Net.Http.HttpMethod("GET");
-                    request_.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
-    
-                    PrepareRequest(client_, request_, urlBuilder_);
-                    var url_ = urlBuilder_.ToString();
-                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
-                    PrepareRequest(client_, request_, url_);
-    
-                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
-                    try
-                    {
-                        var headers_ = System.Linq.Enumerable.ToDictionary(response_.Headers, h_ => h_.Key, h_ => h_.Value);
-                        if (response_.Content != null && response_.Content.Headers != null)
-                        {
-                            foreach (var item_ in response_.Content.Headers)
-                                headers_[item_.Key] = item_.Value;
-                        }
-    
-                        ProcessResponse(client_, response_);
-    
-                        var status_ = ((int)response_.StatusCode).ToString();
-                        if (status_ == "200") 
-                        {
-                            var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false); 
-                            var result_ = default(TaskStateReport); 
-                            try
-                            {
-                                result_ = Newtonsoft.Json.JsonConvert.DeserializeObject<TaskStateReport>(responseData_, _settings.Value);
-                                return result_; 
-                            } 
-                            catch (System.Exception exception_) 
-                            {
-                                throw new WACException("Could not deserialize the response body.", (int)response_.StatusCode, responseData_, headers_, exception_);
-                            }
-                        }
-                        else
-                        if (status_ != "200" && status_ != "204")
-                        {
-                            var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false); 
-                            throw new WACException("The HTTP status code of the response was not expected (" + (int)response_.StatusCode + ").", (int)response_.StatusCode, responseData_, headers_, null);
-                        }
-            
-                        return default(TaskStateReport);
-                    }
-                    finally
-                    {
-                        if (response_ != null)
-                            response_.Dispose();
-                    }
-                }
-            }
-            finally
-            {
-            }
-        }
-    
-        public System.Threading.Tasks.Task<int> FreezeAsync(bool state)
-        {
-            return FreezeAsync(state, System.Threading.CancellationToken.None);
-        }
-    
-        public async System.Threading.Tasks.Task<int> FreezeAsync(bool state, System.Threading.CancellationToken cancellationToken)
+
+            /// <summary>
+            /// Execure GET request
+            /// </summary>
+            /// <typeparam name="T">Type of returned object</typeparam>
+            /// <param name="url">relative URL to API</param>
+            /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+            /// <returns>T object</returns>
+            public async Task<T> GetAsync<T>(string url, CancellationToken cancellationToken)
         {
             var urlBuilder_ = new System.Text.StringBuilder();
-            urlBuilder_.Append(BaseUrl != null ? BaseUrl.TrimEnd('/') : "").Append("/api/State/Freeze");
-    
+            urlBuilder_.Append(BaseUrl != null ? BaseUrl.TrimEnd('/') : "").Append(url);
+
             var client_ = _httpClient;
-            try
+            using (var request_ = new HttpRequestMessage())
             {
-                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                request_.Method = new HttpMethod("GET");
+                request_.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+
+                PrepareRequest(client_, request_, urlBuilder_);
+                var url_ = urlBuilder_.ToString();
+                request_.RequestUri = new Uri(url_, System.UriKind.RelativeOrAbsolute);
+                PrepareRequest(client_, request_, url_);
+
+                using (var response_ = await client_.SendAsync(request_, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false))
                 {
-                    var content_ = new System.Net.Http.StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(state, _settings.Value));
-                    content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
-                    request_.Content = content_;
-                    request_.Method = new System.Net.Http.HttpMethod("POST");
-                    request_.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
-    
-                    PrepareRequest(client_, request_, urlBuilder_);
-                    var url_ = urlBuilder_.ToString();
-                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
-                    PrepareRequest(client_, request_, url_);
-    
-                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
-                    try
+                    var headers_ = Enumerable.ToDictionary(response_.Headers, h_ => h_.Key, h_ => h_.Value);
+                    if (response_.Content != null && response_.Content.Headers != null)
                     {
-                        var headers_ = System.Linq.Enumerable.ToDictionary(response_.Headers, h_ => h_.Key, h_ => h_.Value);
-                        if (response_.Content != null && response_.Content.Headers != null)
-                        {
-                            foreach (var item_ in response_.Content.Headers)
-                                headers_[item_.Key] = item_.Value;
-                        }
-    
-                        ProcessResponse(client_, response_);
-    
-                        var status_ = ((int)response_.StatusCode).ToString();
-                        if (status_ == "200") 
-                        {
-                            var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false); 
-                            var result_ = default(int); 
-                            try
-                            {
-                                result_ = Newtonsoft.Json.JsonConvert.DeserializeObject<int>(responseData_, _settings.Value);
-                                return result_; 
-                            } 
-                            catch (System.Exception exception_) 
-                            {
-                                throw new WACException("Could not deserialize the response body.", (int)response_.StatusCode, responseData_, headers_, exception_);
-                            }
-                        }
-                        else
-                        if (status_ != "200" && status_ != "204")
-                        {
-                            var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false); 
-                            throw new WACException("The HTTP status code of the response was not expected (" + (int)response_.StatusCode + ").", (int)response_.StatusCode, responseData_, headers_, null);
-                        }
-            
-                        return default(int);
+                        foreach (var item_ in response_.Content.Headers)
+                            headers_[item_.Key] = item_.Value;
                     }
-                    finally
+
+                    ProcessResponse(client_, response_);
+
+                    var status_ = ((int)response_.StatusCode).ToString();
+                    if (status_ == "200")
                     {
-                        if (response_ != null)
-                            response_.Dispose();
+                        var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        T result_ = (T)default(T);
+                        try
+                        {
+                            result_ = JsonConvert.DeserializeObject<T>(responseData_, _settings.Value);
+                            return result_;
+                        }
+                        catch (System.Exception exception_)
+                        {
+                            throw new WACException("Could not deserialize the response body.", (int)response_.StatusCode, responseData_, headers_, exception_);
+                        }
                     }
+                    else
+                    if (status_ != "200" && status_ != "204")
+                    {
+                        var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        throw new WACException("The HTTP status code of the response was not expected (" + (int)response_.StatusCode + ").", (int)response_.StatusCode, responseData_, headers_, null);
+                    }
+
+                    return default(T);
                 }
             }
-            finally
-            {
-            }
         }
-    
-        private string ConvertToString(object value, System.Globalization.CultureInfo cultureInfo)
+
+        /// <summary>
+        /// Execute POST request
+        /// </summary>
+        /// <typeparam name="TPrm">Type of send parameter</typeparam>
+        /// <typeparam name="TRet">Type of return object</typeparam>
+        /// <param name="url">relative URL to API</param>
+        /// <param name="prm">object to post</param>
+        /// <returns>TRet object</returns>
+        public async Task<TRet> PostAsync<TPrm, TRet>(string url, TPrm prm)
         {
-            if (value is System.Enum)
+            return await PostAsync<TPrm, TRet>(url,  prm, CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Execute POST request
+        /// </summary>
+        /// <typeparam name="TPrm">Type of send parameter</typeparam>
+        /// <typeparam name="TRet">Type of return object</typeparam>
+        /// <param name="url">relative URL to API</param>
+        /// <param name="prm">object to post</param>
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>TRet object</returns>
+        public async Task<TRet> PostAsync<TPrm, TRet>(string url, TPrm prm, CancellationToken cancellationToken)
+        {
+            var urlBuilder_ = new System.Text.StringBuilder();
+            urlBuilder_.Append(BaseUrl != null ? BaseUrl.TrimEnd('/') : "").Append(url);
+
+            var client_ = _httpClient;
+            using (var request_ = new HttpRequestMessage())
             {
-                string name = System.Enum.GetName(value.GetType(), value);
-                if (name != null)
+                var content_ = new StringContent(JsonConvert.SerializeObject(prm, _settings.Value));
+                content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
+                request_.Content = content_;
+                request_.Method = new HttpMethod("POST");
+                request_.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+
+                PrepareRequest(client_, request_, urlBuilder_);
+                var url_ = urlBuilder_.ToString();
+                request_.RequestUri = new Uri(url_, System.UriKind.RelativeOrAbsolute);
+                PrepareRequest(client_, request_, url_);
+
+                using (var response_ = await client_.SendAsync(request_, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false))
                 {
-                    var field = System.Reflection.IntrospectionExtensions.GetTypeInfo(value.GetType()).GetDeclaredField(name);
-                    if (field != null)
+                    var headers_ = Enumerable.ToDictionary(response_.Headers, h_ => h_.Key, h_ => h_.Value);
+                    if (response_.Content != null && response_.Content.Headers != null)
                     {
-                        var attribute = System.Reflection.CustomAttributeExtensions.GetCustomAttribute(field, typeof(System.Runtime.Serialization.EnumMemberAttribute)) 
-                            as System.Runtime.Serialization.EnumMemberAttribute;
-                        if (attribute != null)
+                        foreach (var item_ in response_.Content.Headers)
+                            headers_[item_.Key] = item_.Value;
+                    }
+
+                    ProcessResponse(client_, response_);
+
+                    var status_ = ((int)response_.StatusCode).ToString();
+                    if (status_ == "200")
+                    {
+                        var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        var result_ = default(TRet);
+                        try
                         {
-                            return attribute.Value;
+                            result_ = JsonConvert.DeserializeObject<TRet>(responseData_, _settings.Value);
+                            return result_;
+                        }
+                        catch (System.Exception exception_)
+                        {
+                            throw new WACException("Could not deserialize the response body.", (int)response_.StatusCode, responseData_, headers_, exception_);
                         }
                     }
+                    else
+                    if (status_ != "200" && status_ != "204")
+                    {
+                        var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        throw new WACException("The HTTP status code of the response was not expected (" + (int)response_.StatusCode + ").", (int)response_.StatusCode, responseData_, headers_, null);
+                    }
+
+                    return default(TRet);
                 }
             }
-            else if (value is byte[])
-            {
-                return System.Convert.ToBase64String((byte[]) value);
-            }
-            else if (value != null && value.GetType().IsArray)
-            {
-                var array = System.Linq.Enumerable.OfType<object>((System.Array) value);
-                return string.Join(",", System.Linq.Enumerable.Select(array, o => ConvertToString(o, cultureInfo)));
-            }
-        
-            return System.Convert.ToString(value, cultureInfo);
         }
+
+
     }
-    
-    
+
+    #region Exceptions
+
     public partial class WACException : System.Exception
     {
         public int StatusCode { get; private set; }
 
         public string Response { get; private set; }
 
-        public System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>> Headers { get; private set; }
+        public Dictionary<string, IEnumerable<string>> Headers { get; private set; }
 
-        public WACException(string message, int statusCode, string response, System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>> headers, System.Exception innerException) 
+        public WACException(string message, int statusCode, string response, Dictionary<string, IEnumerable<string>> headers, System.Exception innerException)
             : base(message + "\n\nStatus: " + statusCode + "\nResponse: \n" + response.Substring(0, response.Length >= 512 ? 512 : response.Length), innerException)
         {
             StatusCode = statusCode;
-            Response = response; 
+            Response = response;
             Headers = headers;
         }
 
@@ -240,11 +222,13 @@ namespace WebAPI
     {
         public TResult Result { get; private set; }
 
-        public WACException(string message, int statusCode, string response, System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>> headers, TResult result, System.Exception innerException) 
+        public WACException(string message, int statusCode, string response, Dictionary<string, IEnumerable<string>> headers, TResult result, System.Exception innerException)
             : base(message, statusCode, response, headers, innerException)
         {
             Result = result;
         }
     }
+
+    #endregion
 
 }

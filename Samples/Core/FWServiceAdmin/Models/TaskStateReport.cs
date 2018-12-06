@@ -6,6 +6,9 @@ using FWServiceAdmin.Code;
 namespace FWServiceAdmin.Models
 {
 
+    /// <summary>
+    /// Microservice's state object, decorated with Extended Attribute 
+    /// </summary>
     [DataContract]
     public class TaskStateReport
     {
@@ -50,6 +53,15 @@ namespace FWServiceAdmin.Models
         public int ErrorsCount { get; set; }
         [DataMember]
         public string[] Exceptions { get; set; }
+
+        /// <summary>
+        /// status of microservice. will be used as [flag]
+        /// </summary>
+        /// <returns></returns>
+        public int GetStatus()
+        {
+            return Freezed ? 2 : 0;
+        }
 
         public string ToJson()
         {

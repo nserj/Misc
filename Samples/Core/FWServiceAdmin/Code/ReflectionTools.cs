@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Reflection;
 
@@ -7,9 +6,16 @@ namespace FWServiceAdmin.Code
 {
     public class ReflectionTools
     {
-        public static Dictionary<string, PropertyValue> DictionaryFromType(object atype)
+
+        /// <summary>
+        /// Convert object to PropertyValue class. ExtendedAttribute describes friendly name, color and default value.
+        /// List object will be ignored
+        /// </summary>
+        /// <param name="atype"></param>
+        /// <returns></returns>
+        public static PropertyValueCollection ParseType(object atype)
         {
-            if (atype == null) return new Dictionary<string, PropertyValue>();
+            if (atype == null) return new PropertyValueCollection();
             Type t = atype.GetType();
             ExtendedAttribute ea;
             PropertyValue pv;
@@ -18,7 +24,7 @@ namespace FWServiceAdmin.Code
 
             PropertyInfo[] props = t.GetProperties();
 
-            Dictionary<string, PropertyValue> dict = new Dictionary<string, PropertyValue>();
+            PropertyValueCollection dict = new PropertyValueCollection();
 
             foreach (PropertyInfo prp in props)
             {
@@ -28,8 +34,11 @@ namespace FWServiceAdmin.Code
                 var value = prp.GetValue(atype, new object[] { });
 
                 ea = prp.GetCustomAttribute<ExtendedAttribute>();
-                pv = new PropertyValue(value, Color.Black);
-                pv.Name = prp.Name;
+                pv = new PropertyValue(value, Color.Black)
+                {
+                    Name = prp.Name,
+                    FriendlyName = prp.Name
+                };
 
                 if (ea != null)
                 {
@@ -57,11 +66,11 @@ namespace FWServiceAdmin.Code
                     }
 
                     if (!string.IsNullOrWhiteSpace(ea.FriendlyName))
-                        pv.Name = ea.FriendlyName;
+                        pv.FriendlyName = ea.FriendlyName;
 
                 }
 
-                dict.Add(prp.Name, pv);
+                dict.Add( pv);
             }
             return dict;
         }
