@@ -5,6 +5,10 @@ using Helpers;
 
 namespace DP2SaaSMCS.Tasks
 {
+
+    /// <summary>
+    /// Table Type parameters of MS SQL
+    /// </summary>
     public class SQLTableParameters
     {
 

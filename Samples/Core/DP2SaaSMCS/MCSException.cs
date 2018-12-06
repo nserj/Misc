@@ -23,6 +23,9 @@ namespace DP2SaaSMCS
         void Clear();
     }
 
+    /// <summary>
+    /// Exception class.
+    /// </summary>
     [DataContract]
     public class MCSException: IMCSException
     {
@@ -43,7 +46,6 @@ namespace DP2SaaSMCS
         protected static Dictionary<int, string> ExceptionPairs;
 
 
-
         public MCSException(IConfiguration _configuration)
         {
             configuration = _configuration;
@@ -54,6 +56,9 @@ namespace DP2SaaSMCS
             Clear();
         }
 
+        /// <summary>
+        /// Load predefined description pairs of exceptions from config file
+        /// </summary>
         public void LoadDescriptions()
         {
 

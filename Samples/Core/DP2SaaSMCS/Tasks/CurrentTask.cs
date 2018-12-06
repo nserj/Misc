@@ -17,6 +17,9 @@ using System.Threading.Tasks;
 namespace DP2SaaSMCS.Tasks
 {
 
+    /// <summary>
+    /// Task to synchronize some SQL tables with SQLite databases on Amazon S3
+    /// </summary>
     public class CurrentTask : IScheduledTask
     {
 
@@ -24,6 +27,7 @@ namespace DP2SaaSMCS.Tasks
         public bool CanBeExecute { get => !(State.InProcess || State.InInternalProcess || State.Freezed || State.EmergencyStopped); }
         public IConfiguration Configuration { get; }
 
+        //the worker state
         public TaskState State { get; set; }
 
        ScheduledTaskState IScheduledTask.State
@@ -86,11 +90,13 @@ namespace DP2SaaSMCS.Tasks
             try
             {
 
+                //are there some data to sync on a SQL Server?
                 CheckForConditions();
 
                 if (_processingData == null || _processingData.Rows.Count == 0)
                     return;
 
+                //prepare data to copy
                 CollectDataToCopy();
 
 
@@ -106,6 +112,9 @@ namespace DP2SaaSMCS.Tasks
                 if (Dbs.Count == 0)
                     return;
 
+
+
+                //copy process
 
                 State.InInternalProcess = true;
 
@@ -129,6 +138,7 @@ namespace DP2SaaSMCS.Tasks
                 if (_cancellationToken.IsCancellationRequested)
                     return;
 
+                //fix synchronization result
                 using (FQO fq = GetFQO())
                 {
 

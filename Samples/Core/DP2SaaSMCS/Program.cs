@@ -39,7 +39,7 @@ namespace DP2SaaSMCS
                     logging.ClearProviders();
                     logging.SetMinimumLevel(LogLevel.Trace);
                 })
-                .UseNLog(); 
+                .UseNLog();  
 
     }
 }

@@ -1,15 +1,12 @@
-﻿using ICSharpCode.SharpZipLib.Core;
+﻿using Helpers.Data;
+using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.GZip;
-using ICSharpCode.SharpZipLib.Zip;
 using ICSharpCode.SharpZipLib.Tar;
-using Helpers.Data;
-using Helpers.Data.TableHelper;
+using ICSharpCode.SharpZipLib.Zip;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace DP2SaaSMCS.Tasks
 {
@@ -23,7 +20,6 @@ namespace DP2SaaSMCS.Tasks
         {
             return (fq.ExecuteScalar<int>("select case when object_id(@tb,'U') is null then 0 else 1 end", CommandType.Text, "@tb", tablename) == 1);
         }
-
 
         public static enmFileFormats DetermineFormatOfFile(string filename)
         {
@@ -47,7 +43,6 @@ namespace DP2SaaSMCS.Tasks
 
             return enmFileFormats.Undefined;
         }
-
 
 
         public static object CreateInstance(string type)
@@ -89,6 +84,13 @@ namespace DP2SaaSMCS.Tasks
             return fp;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <param name="trgPathOrFile">If format is ZIP - Path to folder of output files, GZ - Full file path</param>
+        /// <param name="format">Zip,GZ</param>
+        /// <returns></returns>
         public static int UnPackZipFile(string filename, string trgPathOrFile, enmFileFormats format)
         {
 
@@ -168,6 +170,13 @@ namespace DP2SaaSMCS.Tasks
         {
             using (Stream outStream = File.Create(destfilename))
             {
+                // If you wish to create a .Tar.GZ (.tgz):
+                // - set the filename above to a ".tar.gz",
+                // - create a GZipOutputStream here
+                // - change "new TarOutputStream(outStream)" to "new TarOutputStream(gzoStream)"
+                // Stream gzoStream = new GZipOutputStream(outStream);
+                // gzoStream.SetLevel(3); // 1 - 9, 1 is best speed, 9 is best compression
+
                 using (GZipOutputStream gzoStream = new GZipOutputStream(outStream))
                 {
                     gzoStream.SetLevel(4); // 1 - 9, 1 is best speed, 9 is best compression
@@ -182,6 +191,11 @@ namespace DP2SaaSMCS.Tasks
 
         protected static void CreateTarManually(TarOutputStream tarOutputStream, List<string> srcFiles)
         {
+
+            // Optionally, write an entry for the directory itself.
+            //
+            /*    TarEntry tarEntry = TarEntry.CreateEntryFromFile(sourceDirectory);
+                tarOutputStream.PutNextEntry(tarEntry);*/
 
             // Write each file to the tar.
             //
@@ -198,12 +212,18 @@ namespace DP2SaaSMCS.Tasks
                     tarName = Path.GetFileName(filename);
                     fileSize = inputStream.Length;
 
+                    // Create a tar entry named as appropriate. You can set the name to anything,
+                    // but avoid names starting with drive or UNC.
+
                     entry = TarEntry.CreateTarEntry(tarName);
 
+                    // Must set size, otherwise TarOutputStream will fail when output exceeds.
                     entry.Size = fileSize;
 
+                    // Add the entry to the tar stream, before writing the data.
                     tarOutputStream.PutNextEntry(entry);
 
+                    // this is copied from TarArchive.WriteEntryCore
                     while (true)
                     {
                         numRead = inputStream.Read(localBuffer, 0, localBuffer.Length);

@@ -23,7 +23,7 @@ namespace DP2SaaSMCS.Controllers
         [Route("GetState")]
         public ActionResult<TaskStateReport> GetState()
         {
-            return (TaskStateReport) sch_task.State.ToReport();
+            return sch_task.State.ToReport();
         }
 
         [HttpPost]

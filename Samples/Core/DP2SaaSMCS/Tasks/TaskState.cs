@@ -8,6 +8,9 @@ using System.ComponentModel;
 namespace DP2SaaSMCS.Tasks
 {
 
+    /// <summary>
+    /// Describe current state of a task
+    /// </summary>
     [DataContract]
     public class TaskState : ScheduledTaskState, INotifyPropertyChanged
     {
